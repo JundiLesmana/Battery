@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battery Status Monitor</title>
+    <style>
+        /* (CSS) */
+        * {
+            margin: 0;
+            padding: 0;git status
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f0f0f0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+            margin: 20px auto;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .battery-container {
+            position: relative;
+            width: 200px;
+            height: 100px;
+            margin: 20px auto;
+        }
+
+        .battery-body {
+            position: absolute;
+            width: 180px;
+            height: 80px;
+            border: 3px solid #2c3e50;
+            border-radius: 10px;
+            background: #ffffff;
+        }
+
+        .battery-cap {
+            position: absolute;
+            right: -10px;
+            top: 30px;
+            width: 10px;
+            height: 20px;
+            background: #2c3e50;
+            border-radius: 0 3px 3px 0;
+        }
+
+        .battery-level {
+            position: absolute;
+            left: 5px;
+            top: 5px;
+            bottom: 5px;
+            background: #4CAF50;
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        .status-info {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.2rem;
+        }
+
+        .status-info div {
+            margin: 10px 0;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .charging {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 0.4; }
+            100% { opacity: 0.8; }
+        }
+
+        .voltage {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Battery Status Monitor</h1>
+        
+        <div class="battery-container">
+            <div class="battery-body">
+                <div class="battery-level" id="batteryLevel"></div>
+            </div>
+            <div class="battery-cap"></div>
+        </div>
+
+        <div class="status-info">
+            <div>
+                Level: <span id="levelText">0%</span>
+            </div>
+            <div>
+                Status Charging: <span id="chargingStatus">Not Charging</span>
+            </div>
+            <div>
+                Voltage: <span id="voltage" class="voltage">0.00V</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        navigator.getBattery().then(function(battery) {
+            const batteryLevel = document.getElementById('batteryLevel');
+            const levelText = document.getElementById('levelText');
+            const chargingStatus = document.getElementById('chargingStatus');
+            const voltageElement = document.getElementById('voltage');
+
+            function updateAllInfo() {
+                const level = battery.level * 100;
+                
+                // Update battery level
+                batteryLevel.style.width = `${level}%`;
+                levelText.textContent = `${Math.round(level)}%`;
+
+                // Update charging status and voltage
+                if(battery.charging) {
+                    chargingStatus.textContent = "Charging 🔌";
+                    batteryLevel.classList.add('charging');
+                    
+                    // Calculate voltage only when charging
+                    const minVoltage = 3.3;
+                    const maxVoltage = 4.2;
+                    const voltage = (battery.level * (maxVoltage - minVoltage)) + minVoltage;
+                    voltageElement.textContent = `${voltage.toFixed(2)}V`;
+                } else {
+                    chargingStatus.textContent = "Not Charging 🔋";
+                    batteryLevel.classList.remove('charging');
+                    voltageElement.textContent = "0.00V"; // Set to 0V when not charging
+                }
+            }
+
+            battery.addEventListener('levelchange', updateAllInfo);
+            battery.addEventListener('chargingchange', updateAllInfo);
+            battery.addEventListener('chargingtimechange', updateAllInfo);
+            battery.addEventListener('dischargingtimechange', updateAllInfo);
+
+            updateAllInfo();
+        }).catch(function(error) {
+            console.log("Battery API not supported: ", error);
+            document.getElementById('levelText').textContent = "Not Supported";
+            document.getElementById('chargingStatus').textContent = "Not Supported";
+            document.getElementById('voltage').textContent = "N/A";
+        });
+
+        if (!navigator.getBattery) {
+            document.getElementById('levelText').textContent = "API Not Supported";
+            document.getElementById('chargingStatus').textContent = "API Not Supported";
+            document.getElementById('voltage').textContent = "N/A";
+        }
+    </script>
+</body>
+</html>
